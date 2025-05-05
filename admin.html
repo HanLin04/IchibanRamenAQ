@@ -1,0 +1,56 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Administración - Ichiban Ramen</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2rem; }
+    button { padding: 1rem 2rem; font-size: 1.2rem; margin: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Panel de Administración</h1>
+  <h2 id="currentTurn">Turno actual: 0</h2>
+  <button onclick="nextTurn()">Llamar siguiente</button>
+  <button onclick="clearQueue()">Limpiar cola</button>
+  <h3>Cola actual:</h3>
+  <ul id="queueList"></ul>
+
+  <script>
+    function updateDisplay() {
+      const current = parseInt(localStorage.getItem("current") || "0");
+      const queue = JSON.parse(localStorage.getItem("queue") || "[]");
+      document.getElementById("currentTurn").textContent = "Turno actual: " + current;
+      const ul = document.getElementById("queueList");
+      ul.innerHTML = "";
+      queue.forEach(num => {
+        const li = document.createElement("li");
+        li.textContent = "Turno " + num;
+        ul.appendChild(li);
+      });
+    }
+
+    function nextTurn() {
+      let current = parseInt(localStorage.getItem("current") || "0");
+      const queue = JSON.parse(localStorage.getItem("queue") || "[]");
+      if (queue.length > 0) {
+        current = queue.shift();
+        localStorage.setItem("current", current);
+        localStorage.setItem("queue", JSON.stringify(queue));
+        updateDisplay();
+      }
+    }
+
+    function clearQueue() {
+      localStorage.removeItem("queue");
+      localStorage.removeItem("current");
+      localStorage.removeItem("myNumber");
+      updateDisplay();
+    }
+
+    updateDisplay();
+    setInterval(updateDisplay, 2000);
+  </script>
+</body>
+</html>
