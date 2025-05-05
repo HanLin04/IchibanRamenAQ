@@ -1,128 +1,55 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema de Colas Restaurante</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>Ichiban Ramen - Turnos</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2rem; }
+    button { padding: 1rem 2rem; font-size: 1.2rem; margin-top: 1rem; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
-  <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-6">
-    <h1 class="text-2xl font-bold text-center mb-4">🍜 Sistema de Colas Restaurante</h1>
-
-    <!-- Sección de cliente -->
-    <div class="mb-6">
-      <button id="takeNumberBtn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl text-lg">👉 Tomar Número</button>
-      <p class="mt-2 text-center text-gray-700">Número de personas en cola: <span id="queueCount">0</span></p>
-      <p class="text-center text-blue-600 font-semibold mt-1" id="myNumberDisplay"></p>
-    </div>
-
-    <hr class="my-4">
-
-    <!-- Panel del administrador -->
-    <div>
-      <h2 class="text-xl font-semibold mb-2">🧑‍🍳 Panel del Administrador</h2>
-      <p>Número actual en espera: <span class="font-bold" id="currentNumber">-</span></p>
-      <p class="text-red-500" id="timerDisplay"></p>
-      <div class="flex gap-2 mt-3">
-        <button id="nextBtn" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl">🔔 Llamar siguiente</button>
-        <button id="skipBtn" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-xl">❌ Saltar</button>
-        <button id="confirmBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl">✅ Llegado</button>
-      </div>
-    </div>
-  </div>
+<body>
+  <h1>Bienvenido a Ichiban Ramen</h1>
+  <h2 id="myNumberDisplay"></h2>
+  <button onclick="getNumber()">¡Tomar un turno!</button>
+  <p id="status"></p>
 
   <script>
-    let queue = [];
-    let currentNumber = null;
-    let numberCounter = 0;
-    let timer = null;
-    let timerSeconds = 0;
+    let myNumber = localStorage.getItem("myNumber");
 
-    const takeNumberBtn = document.getElementById('takeNumberBtn');
-    const queueCount = document.getElementById('queueCount');
-    const myNumberDisplay = document.getElementById('myNumberDisplay');
-    const currentNumberDisplay = document.getElementById('currentNumber');
-    const timerDisplay = document.getElementById('timerDisplay');
-
-    const nextBtn = document.getElementById('nextBtn');
-    const skipBtn = document.getElementById('skipBtn');
-    const confirmBtn = document.getElementById('confirmBtn');
-
-    function updateQueueCount() {
-      queueCount.textContent = queue.length;
+    function getNumber() {
+      const queue = JSON.parse(localStorage.getItem("queue") || "[]");
+      const newNumber = queue.length > 0 ? queue[queue.length - 1] + 1 : 1;
+      queue.push(newNumber);
+      localStorage.setItem("queue", JSON.stringify(queue));
+      localStorage.setItem("myNumber", newNumber);
+      myNumber = newNumber;
+      displayNumber();
     }
 
-    function generateNumber() {
-      numberCounter++;
-      return 'A' + String(numberCounter).padStart(3, '0');
+    function displayNumber() {
+      if (myNumber) {
+        document.getElementById("myNumberDisplay").textContent = "Tu número: " + myNumber;
+      }
     }
 
-    function startTimer() {
-      stopTimer();
-      timerSeconds = 300;
-      timerDisplay.textContent = `Tiempo restante: ${formatTime(timerSeconds)}`;
-      timer = setInterval(() => {
-        timerSeconds--;
-        timerDisplay.textContent = `Tiempo restante: ${formatTime(timerSeconds)}`;
-        if (timerSeconds <= 0) {
-          stopTimer();
-          alert(currentNumber + ' ¡Se ha cancelado por no llegar a tiempo!');
-          currentNumber = null;
-          callNext();
+    function checkStatus() {
+      const current = parseInt(localStorage.getItem("current") || "0");
+      if (myNumber) {
+        if (current === parseInt(myNumber)) {
+          document.getElementById("status").textContent = "¡Es tu turno! Por favor, acércate.";
+        } else if (current > myNumber) {
+          document.getElementById("status").textContent = "Tu turno ha expirado.";
+        } else {
+          document.getElementById("status").textContent = "Esperando... Turno actual: " + current;
         }
-      }, 1000);
-    }
-
-    function stopTimer() {
-      clearInterval(timer);
-      timerDisplay.textContent = '';
-    }
-
-    function formatTime(seconds) {
-      const min = String(Math.floor(seconds / 60)).padStart(2, '0');
-      const sec = String(seconds % 60).padStart(2, '0');
-      return `${min}:${sec}`;
-    }
-
-    function callNext() {
-      if (queue.length === 0) {
-        currentNumber = null;
-        currentNumberDisplay.textContent = '-';
-        return;
       }
-      currentNumber = queue.shift();
-      currentNumberDisplay.textContent = currentNumber;
-      updateQueueCount();
-      startTimer();
     }
 
-    takeNumberBtn.addEventListener('click', () => {
-      const num = generateNumber();
-      queue.push(num);
-      updateQueueCount();
-      myNumberDisplay.textContent = `Su número es: ${num}`;
-    });
-
-    nextBtn.addEventListener('click', () => {
-      if (currentNumber) {
-        alert(currentNumber + ' ¡Se ha saltado!');
-      }
-      callNext();
-    });
-
-    skipBtn.addEventListener('click', () => {
-      callNext();
-    });
-
-    confirmBtn.addEventListener('click', () => {
-      if (currentNumber) {
-        alert(currentNumber + ' ¡Llegado! ✅');
-        stopTimer();
-        currentNumber = null;
-        callNext();
-      }
-    });
+    displayNumber();
+    setInterval(checkStatus, 2000);
   </script>
 </body>
 </html>
+
