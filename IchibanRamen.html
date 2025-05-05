@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Colas Restaurante</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+  <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-6">
+    <h1 class="text-2xl font-bold text-center mb-4">🍜 Sistema de Colas Restaurante</h1>
+
+    <!-- Sección de cliente -->
+    <div class="mb-6">
+      <button id="takeNumberBtn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl text-lg">👉 Tomar Número</button>
+      <p class="mt-2 text-center text-gray-700">Número de personas en cola: <span id="queueCount">0</span></p>
+      <p class="text-center text-blue-600 font-semibold mt-1" id="myNumberDisplay"></p>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Panel del administrador -->
+    <div>
+      <h2 class="text-xl font-semibold mb-2">🧑‍🍳 Panel del Administrador</h2>
+      <p>Número actual en espera: <span class="font-bold" id="currentNumber">-</span></p>
+      <p class="text-red-500" id="timerDisplay"></p>
+      <div class="flex gap-2 mt-3">
+        <button id="nextBtn" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl">🔔 Llamar siguiente</button>
+        <button id="skipBtn" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-xl">❌ Saltar</button>
+        <button id="confirmBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl">✅ Llegado</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let queue = [];
+    let currentNumber = null;
+    let numberCounter = 0;
+    let timer = null;
+    let timerSeconds = 0;
+
+    const takeNumberBtn = document.getElementById('takeNumberBtn');
+    const queueCount = document.getElementById('queueCount');
+    const myNumberDisplay = document.getElementById('myNumberDisplay');
+    const currentNumberDisplay = document.getElementById('currentNumber');
+    const timerDisplay = document.getElementById('timerDisplay');
+
+    const nextBtn = document.getElementById('nextBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    function updateQueueCount() {
+      queueCount.textContent = queue.length;
+    }
+
+    function generateNumber() {
+      numberCounter++;
+      return 'A' + String(numberCounter).padStart(3, '0');
+    }
+
+    function startTimer() {
+      stopTimer();
+      timerSeconds = 300;
+      timerDisplay.textContent = `Tiempo restante: ${formatTime(timerSeconds)}`;
+      timer = setInterval(() => {
+        timerSeconds--;
+        timerDisplay.textContent = `Tiempo restante: ${formatTime(timerSeconds)}`;
+        if (timerSeconds <= 0) {
+          stopTimer();
+          alert(currentNumber + ' ¡Se ha cancelado por no llegar a tiempo!');
+          currentNumber = null;
+          callNext();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
+      timerDisplay.textContent = '';
+    }
+
+    function formatTime(seconds) {
+      const min = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const sec = String(seconds % 60).padStart(2, '0');
+      return `${min}:${sec}`;
+    }
+
+    function callNext() {
+      if (queue.length === 0) {
+        currentNumber = null;
+        currentNumberDisplay.textContent = '-';
+        return;
+      }
+      currentNumber = queue.shift();
+      currentNumberDisplay.textContent = currentNumber;
+      updateQueueCount();
+      startTimer();
+    }
+
+    takeNumberBtn.addEventListener('click', () => {
+      const num = generateNumber();
+      queue.push(num);
+      updateQueueCount();
+      myNumberDisplay.textContent = `Su número es: ${num}`;
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentNumber) {
+        alert(currentNumber + ' ¡Se ha saltado!');
+      }
+      callNext();
+    });
+
+    skipBtn.addEventListener('click', () => {
+      callNext();
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      if (currentNumber) {
+        alert(currentNumber + ' ¡Llegado! ✅');
+        stopTimer();
+        currentNumber = null;
+        callNext();
+      }
+    });
+  </script>
+</body>
+</html>
